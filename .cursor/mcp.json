@@ -1,0 +1,10 @@
+{
+    "mcpServers": {
+      "weather-forecast": {
+        "command": "node",
+        "args": [
+          "./build/index.js"
+        ]
+      }
+    }
+  }
