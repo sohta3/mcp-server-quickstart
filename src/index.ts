@@ -14,6 +14,7 @@ const server = new Server(
   {
     capabilities: {
       tools: {},
+      logging: {},
     },
   },
 );
@@ -46,12 +47,8 @@ async function makeNWSRequest<T>(url: string): Promise<T | null> {
     Accept: "application/geo+json",
   };
 
-  console.log(`[DEBUG] Making request to: ${url}`);
-  console.log(`[DEBUG] Headers: ${JSON.stringify(headers)}`);
-
   try {
     const response = await fetch(url, { headers });
-    console.log(`[DEBUG] Response status: ${response.status}`);
 
     if (!response.ok) {
       console.error(`[ERROR] HTTP error! status: ${response.status}`);
@@ -59,7 +56,6 @@ async function makeNWSRequest<T>(url: string): Promise<T | null> {
     }
 
     const data = await response.json();
-    console.log(`[DEBUG] Response data: ${JSON.stringify(data, null, 2)}`);
     return data as T;
   } catch (error) {
     console.error("[ERROR] Error making NWS request:", error);
@@ -94,6 +90,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
 // [3] Toolの利用
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  server.sendLoggingMessage({
+    level: "debug",
+    data: {
+      message: "リクエストを受信しました",
+      request: request,
+    },
+  });
+
   if (request.params.name !== "get_forecast") {
     throw new Error("Unknown prompt");
   }
@@ -102,6 +106,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     latitude: number;
     longitude: number;
   };
+
+  server.sendLoggingMessage({
+    level: "debug",
+    data: {
+      message: "天気予報の取得を開始します",
+      coordinates: { latitude, longitude },
+    },
+  });
 
   // Get grid point data
   const pointsUrl = `${NWS_API_BASE}/points/${latitude.toFixed(4)},${longitude.toFixed(4)}`;
